@@ -47,6 +47,3 @@ if __name__ == '__main__':
         #    print("Episode finished after {} timesteps".format(t+1))
         #    break
         env.close()
-
-
-
