@@ -1,8 +1,0 @@
-{
-  "game_list":[
-    "CartPole-v0",
-    "MountainCar-v0",
-    "MsPacman-v0",
-    "FrozenLake8x8-v0"
-  ]
-}
