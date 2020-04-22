@@ -56,7 +56,7 @@ class A2CRolloutStorage:
             #  3. self.rewards stores the rewards at each timestep.
 
             # self.returns[step] = None
-            pass
+             self.returns[step] = self.rewards[step] + gamma * self.returns[step + 1] * self.masks[step + 1]
 
 
 class PPORolloutStorage(A2CRolloutStorage):
@@ -102,14 +102,13 @@ class PPORolloutStorage(A2CRolloutStorage):
                 #  4. The for-loop is in a reverse order, so the varable
                 #   `step` is started from `num_steps`
                 #  5. Check the notebook for more information.
-
-                # self.returns[step] = None
-                pass
+                
+                td_error = self.rewards[step] + gamma * self.value_preds[step + 1] * self.masks[step + 1] - self.value_preds[step]
+                gae = td_error + gamma * self.gae_lambda * self.masks[step + 1] * gae
+                self.returns[step] = gae + self.value_preds[step]
 
         else:
             self.returns[-1] = next_value
             for step in reversed(range(self.rewards.size(0))):
                 # [TODO] Copy your A2C returns computing codes here.
-                self.returns[step] = None
-                pass
-
+                self.returns[step] = self.rewards[step] + gamma * self.returns[step + 1] * self.masks[step + 1]

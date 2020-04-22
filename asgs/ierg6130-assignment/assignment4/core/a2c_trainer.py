@@ -64,18 +64,16 @@ class A2CTrainer(BaseTrainer):
         action_log_probs = action_log_probs.view(num_steps, num_processes, 1)
 
         # [TODO] Get the unnormalized advantages
-        advantages = None
-        pass
+        advantages = rollouts.returns[:-1] - values
 
         # [TODO] Get the value loss
-        value_loss = None
-        pass
+        value_loss = advantages.pow(2).mean()
 
         # [TODO] Normalize the advantages
-        pass
+        advantages = (advantages - advantages.mean()) / max(advantages.std(), 1e-6)
 
         # [TODO] Get the policy loss
-        policy_loss = None
+        policy_loss = -(action_log_probs * advantages).mean()
 
         # Get the total loss
         loss = policy_loss + self.value_loss_weight * value_loss - \
@@ -88,7 +86,11 @@ class A2CTrainer(BaseTrainer):
             rollout)
         # [TODO] Step self.optimizer by computing the gradient of total loss
         # Hint: remember to clip the gradient to self.grad_norm_max
-        pass
+        
+        self.optimizer.zero_grad()
+        total_loss.backward()
+        torch.nn.utils.clip_grad_norm(self.model.parameters(),self.grad_norm_max)
+        self.optimizer.step()
 
         return action_loss.item(), value_loss.item(), dist_entropy.item(), \
                total_loss.item()

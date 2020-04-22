@@ -163,11 +163,8 @@ def train(args):
                 #   1. Remember to disable gradient computing
                 #   2. trainer.rollouts is a storage containing all data
                 #   3. What observation is needed for trainer.compute_action?
-                values = None
-                actions = None
-                action_log_prob = None
-                pass
-
+                with torch.no_grad():
+                    values, actions, action_log_prob = trainer.compute_action(trainer.rollouts.observations[index])
                 cpu_actions = actions.view(-1).cpu().numpy()
 
                 # Step the environment

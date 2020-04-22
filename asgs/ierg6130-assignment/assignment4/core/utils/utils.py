@@ -54,7 +54,8 @@ def step_envs(cpu_actions, envs, episode_rewards, frame_stack_tensor,
     #  environments) with masks, in order to refresh the reward accumulating
     #  when some episodes is terminated.
     # Hint: Pay attention to the shape of `masks` and `episode_rewards`
-    pass
+    for i in range(masks.size):
+        episode_rewards[i] = masks[i] * episode_rewards[i]
 
     assert episode_rewards.shape == episode_rewards_old_shape
 

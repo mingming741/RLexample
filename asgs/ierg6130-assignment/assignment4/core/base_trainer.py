@@ -14,6 +14,7 @@ import gym
 import numpy as np
 import torch
 from torch.distributions import Categorical
+import torch.nn.functional as F
 
 from .network import ActorCritic, MLP
 
@@ -63,7 +64,6 @@ class BaseTrainer:
         if isinstance(obs, np.ndarray):
             obs = torch.from_numpy(obs).to(self.device)
         logits, values = self.model(obs)
-
         # [TODO] Get the action and action's log probabilities based on the
         #  output logits
         # Hint:
@@ -71,12 +71,16 @@ class BaseTrainer:
         #   2. Remember to check the shape of action and log prob.
         #   3. When deterministic is True, return the action with maximum
         #    probability
-        actions = None
-        action_log_probs = None
-        pass
+        prob = F.softmax(logits, dim=-1)
+        m = Categorical(prob)
+        if deterministic == True:
+            actions = prob.argmax(dim=-1, keepdim=True)
+        elif deterministic == False:
+            actions = m.sample()
+        action_log_probs = m.log_prob(actions)
+        action_log_probs=action_log_probs[:,np.newaxis]
 
-        return values.view(-1, 1), actions.view(-1, 1), action_log_probs.view(
-            -1, 1)
+        return values.view(-1, 1), actions.view(-1, 1), action_log_probs.view(-1, 1)
 
     def evaluate_actions(self, obs, act):
         """Run models to get the values, log probability and action
@@ -85,10 +89,10 @@ class BaseTrainer:
         # [TODO] Get the log probability of specified action, and the entropy of
         #  current distribution w.r.t. the output logits.
         # Hint: Use proper distribution to help you
-        action_log_probs = None
-        dist_entropy = None
-        pass
-
+        prob = F.softmax(logits,dim=-1)
+        m = Categorical(prob)
+        action_log_probs = m.log_prob(act.squeeze(-1)).view(act.size(0),-1).sum(-1).unsqueeze(-1)
+        dist_entropy = m.entropy().mean()
         assert dist_entropy.shape == ()
         return values.view(-1, 1), action_log_probs.view(-1, 1), dist_entropy
 
